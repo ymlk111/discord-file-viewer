@@ -100,6 +100,7 @@ const att = (filename, extra = {}) => ({
 
 // ---- Discord API と CDN のモック ----
 const edits = new Map();
+let registered = null;
 const mock = createServer((req, res) => {
   const url = new URL(req.url, MOCK);
   const file = url.pathname.match(/^\/files\/(.+)$/);
@@ -107,6 +108,19 @@ const mock = createServer((req, res) => {
     const data = fixtures[decodeURIComponent(file[1])];
     if (!data) return res.writeHead(404).end();
     return res.writeHead(200, { 'Content-Type': 'application/octet-stream' }).end(data);
+  }
+  if (req.method === 'GET' && url.pathname === '/api/applications/@me') {
+    if (req.headers.authorization !== 'Bot test-token') return res.writeHead(401).end('{}');
+    return res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ id: '123', name: 'テストアプリ', verify_key: pubHex }));
+  }
+  if (req.method === 'PUT' && url.pathname === '/api/applications/123/commands') {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      registered = JSON.parse(body);
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(body);
+    });
+    return;
   }
   const edit = url.pathname.match(/^\/api\/webhooks\/([^/]+)\/([^/]+)\/messages\/@original$/);
   if (req.method === 'PATCH' && edit) {
@@ -136,6 +150,7 @@ const vars = {
   DISCORD_API_BASE: `${MOCK}/api`,
   ALLOWED_ATTACHMENT_HOSTS: '127.0.0.1',
   MAX_FILE_MB: '1',
+  DISCORD_BOT_TOKEN: 'test-token',
 };
 const dev = spawn(
   'npx',
@@ -326,6 +341,17 @@ try {
     assert.equal((await fetch(`${W}/v/AAAAAAAAAAAAAAAAAAAAAA`)).status, 404);
     assert.equal((await fetch(`${W}/v/../../etc`)).status, 404);
     assert.equal((await fetch(`${W}/raw/short`)).status, 404);
+  });
+
+  await test('/setup でコマンドを登録してインストールリンクを表示', async () => {
+    const r = await fetch(`${W}/setup`);
+    assert.equal(r.status, 200);
+    const html = await r.text();
+    assert.match(html, /セットアップ完了/);
+    assert.match(html, /client_id=123&amp;integration_type=1&amp;scope=applications\.commands/);
+    assert.equal(registered[0].type, 3);
+    assert.equal(registered[0].name_localizations.ja, 'ビューワーで開く');
+    assert.doesNotMatch(html, /一致しません/);
   });
 
   await test('静的ファイル（ライブラリ）が配信される', async () => {

@@ -71,6 +71,17 @@ npm run setup
 自動設定がうまくいかない場合は、表示されるメッセージのとおり Developer Portal で手動設定してください
 （General Information → Interactions Endpoint URL / Installation → User Install）。
 
+### B'. ブラウザだけでデプロイする場合（PC で npm を使わない）
+
+1. Cloudflare ダッシュボード → Workers KV で名前空間を作り、id を `wrangler.toml` に書いて push
+2. Developer Portal の General Information にある **Public Key** を `wrangler.toml` の `[vars]` に `DISCORD_PUBLIC_KEY = "..."` として追記して push（公開鍵なので Git に入れて問題ありません）
+3. Workers & Pages → 作成 → **リポジトリをインポート** でこのリポジトリを選んでデプロイ（以後 push するたびに自動デプロイ）
+4. Developer Portal → General Information → **Interactions Endpoint URL** に `https://<Worker のURL>/interactions` を入れて保存
+5. Developer Portal → Installation → **User Install** にチェック、Install Link は「Discord Provided Link」
+6. Worker の 設定 → 変数とシークレット に、シークレット `DISCORD_BOT_TOKEN`（A-2 のトークン）を追加
+7. ブラウザで `https://<Worker のURL>/setup` を開く → コマンド登録とインストール用リンクの表示まで行われます
+   （登録後は `DISCORD_BOT_TOKEN` を削除しても動きます）
+
 ### C. インストール（iPhone）
 
 `npm run setup` の最後に表示されるリンク

@@ -2,10 +2,12 @@
 //   POST /interactions  Discord からのインタラクション
 //   GET  /v/:id         ビューワー画面
 //   GET  /raw/:id       元ファイル（?dl=1 でダウンロード）
+//   GET  /setup         コマンド登録（シークレット DISCORD_BOT_TOKEN が必要）
 //   静的ファイル（/viewer.js, /viewer.css, /vendor/*）は public/ から配信
 
 import { handleInteraction } from './discord.js';
-import { renderMessage, renderViewer } from './pages.js';
+import { renderMessage, renderSetup, renderViewer } from './pages.js';
+import { runSetup } from './setup.js';
 import { ID_RE, getFile, getMeta } from './store.js';
 import { isSvg } from './kinds.js';
 
@@ -121,6 +123,10 @@ export default {
       let m;
       if ((m = pathname.match(/^\/v\/([^/]+)\/?$/))) return await viewPage(m[1], env);
       if ((m = pathname.match(/^\/raw\/([^/]+)$/))) return await rawFile(m[1], env, url.searchParams.has('dl'));
+      if (pathname === '/setup') {
+        const result = await runSetup(env);
+        return htmlResponse(renderSetup(result), result.ok ? 200 : 400);
+      }
       if (pathname === '/') {
         return htmlResponse(renderMessage('Discord File Viewer', '動作中です。Discordでメッセージを長押し →「アプリ」→「ビューワーで開く」で使えます。'));
       }

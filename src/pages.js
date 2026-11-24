@@ -57,3 +57,17 @@ export function renderMessage(title, message) {
 </body>
 </html>`;
 }
+
+export function renderSetup({ ok, title, lines, installUrl }) {
+  const items = lines
+    .map((l) => (l === installUrl ? `<li><a href="${esc(l)}">${esc(l)}</a></li>` : `<li>${esc(l)}</li>`))
+    .join('\n');
+  return `${head(title)}
+<body class="kind-message">
+<main class="message">
+  <h1>${ok ? '✅' : '⚠️'} ${esc(title)}</h1>
+  <ul class="setup">${items}</ul>
+</main>
+</body>
+</html>`;
+}

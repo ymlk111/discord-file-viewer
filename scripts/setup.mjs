@@ -9,11 +9,17 @@
 // オプション: --skip-secret  シークレット登録を飛ばす（手動で wrangler secret put した場合）
 
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { COMMANDS, installUrl } from '../src/commands.js';
 
 const API = 'https://discord.com/api/v10';
 const token = (process.env.DISCORD_BOT_TOKEN || '').trim();
 const workerUrl = (process.env.WORKER_URL || '').trim().replace(/\/+$/, '');
-const skipSecret = process.argv.includes('--skip-secret');
+// wrangler.toml の [vars] に DISCORD_PUBLIC_KEY が書いてあればシークレット登録は不要
+const tomlHasKey = /^\s*DISCORD_PUBLIC_KEY\s*=\s*"[0-9a-fA-F]{64}"/m.test(
+  readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8'),
+);
+const skipSecret = process.argv.includes('--skip-secret') || tomlHasKey;
 
 function fail(msg) {
   console.error(`\n✖ ${msg}`);
@@ -55,7 +61,7 @@ console.log(`   アプリ名: ${me.data.name} / Application ID: ${appId}`);
 
 // 2. シークレット
 if (skipSecret) {
-  console.log('2/5 シークレット登録はスキップ（--skip-secret）');
+  console.log(`2/5 シークレット登録はスキップ（${tomlHasKey ? 'wrangler.toml に設定済み' : '--skip-secret'}）`);
 } else {
   console.log('2/5 DISCORD_PUBLIC_KEY を Worker に登録…');
   const r = spawnSync('npx wrangler secret put DISCORD_PUBLIC_KEY', {
@@ -103,20 +109,11 @@ if (!it.ok) {
 
 // 4. コマンド登録
 console.log('4/5 メッセージコマンドを登録…');
-const commands = [
-  {
-    name: 'Open in Viewer',
-    name_localizations: { ja: 'ビューワーで開く' },
-    type: 3, // MESSAGE（メッセージ長押しメニュー）
-    integration_types: [0, 1], // サーバーインストール / ユーザーインストール
-    contexts: [0, 1, 2], // サーバー / Botとの DM / それ以外の DM・グループ
-  },
-];
-const cmd = await discord('PUT', `/applications/${appId}/commands`, commands);
+const cmd = await discord('PUT', `/applications/${appId}/commands`, COMMANDS);
 if (!cmd.ok) fail(`コマンド登録に失敗しました (HTTP ${cmd.status})\n${JSON.stringify(cmd.data)}`);
 
 // 5. インストールリンク
 console.log('5/5 完了\n');
 console.log('▼ このリンクをiPhoneで開いて「マイアプリに追加」してください');
-console.log(`  https://discord.com/oauth2/authorize?client_id=${appId}&integration_type=1&scope=applications.commands\n`);
+console.log(`  ${installUrl(appId)}\n`);
 console.log('使い方: Discordでメッセージを長押し →「アプリ」→「ビューワーで開く」');
