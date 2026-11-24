@@ -16,6 +16,8 @@ binding = "FILES"
 id = "7fa2f56168be426fb416f7e4c017e071"
 
 [vars]
+# Discord アプリ「ファイルビューワー」(ID 1574809549800472666) の Public Key（公開鍵なので Git に入れて問題ない）
+DISCORD_PUBLIC_KEY = "50041b1c36a2d2515d0b76a2d20def0adadc938c822dc007cb657820e03525fb"
 TTL_DAYS = "7"      # リンクの有効日数
 MAX_FILE_MB = "10"  # 1ファイルの上限サイズ（MB）
 
