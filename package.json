@@ -1,0 +1,24 @@
+{
+  "name": "discord-file-viewer",
+  "version": "1.0.0",
+  "description": "iPhoneのDiscordから md / html / テキストを整形表示するビューワー（Cloudflare Workers）",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "setup": "node --env-file-if-exists=.env scripts/setup.mjs",
+    "test": "node test/e2e.mjs"
+  },
+  "devDependencies": {
+    "@highlightjs/cdn-assets": "^11.12.0",
+    "dompurify": "^3.5.0",
+    "github-markdown-css": "^5.9.0",
+    "marked": "^18.3.0",
+    "mermaid": "^12.3.0",
+    "wrangler": "^4.168.0"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.9"
+  }
+}

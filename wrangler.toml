@@ -1,0 +1,22 @@
+name = "discord-file-viewer"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+# デプロイ・ローカル実行の前に、表示用ライブラリを public/vendor へコピーする
+[build]
+command = "node scripts/vendor.mjs"
+
+[assets]
+directory = "./public"
+
+# ファイル保存用 KV。`npx wrangler kv namespace create FILES` で作成した id に置き換える
+[[kv_namespaces]]
+binding = "FILES"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+TTL_DAYS = "7"      # リンクの有効日数
+MAX_FILE_MB = "10"  # 1ファイルの上限サイズ（MB）
+
+[observability]
+enabled = true
